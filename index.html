@@ -4,133 +4,93 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>skzlx.com</title>
-  <meta name="description" content="Official page for skzlx.com featuring looping visual media." />
+  <meta name="description" content="skzlx.com" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#000000" />
   <link rel="canonical" href="https://skzlx.com/" />
 
-  <!-- Open Graph / Social Sharing Tags -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://skzlx.com/" />
-  <meta property="og:site_name" content="skzlx.com" />
   <meta property="og:title" content="skzlx.com" />
-  <meta property="og:description" content="Official page for skzlx.com featuring looping visual media." />
+  <meta property="og:description" content="skzlx.com" />
   <meta property="og:video" content="https://skzlx.com/K65J0P9HHJ.mp4" />
   <meta property="og:video:type" content="video/mp4" />
-  <meta property="og:video:width" content="1080" />
-  <meta property="og:video:height" content="1080" />
-
-  <!-- Twitter Card Tags -->
-  <meta name="twitter:card" content="player" />
-  <meta name="twitter:title" content="skzlx.com" />
-  <meta name="twitter:description" content="Official page for skzlx.com featuring looping visual media." />
 
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
+    html, body {
       margin: 0;
       padding: 0;
-    }
-
-    html,
-    body {
       width: 100%;
       height: 100%;
-      min-height: 100vh;
-      min-height: 100dvh;
-      background-color: #000000;
-      color: #ffffff;
+      background: #000;
       overflow: hidden;
-    }
-
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: env(safe-area-inset-top)
-               env(safe-area-inset-right)
-               env(safe-area-inset-bottom)
-               env(safe-area-inset-left);
-    }
-
-    .video-frame {
-      width: min(100vw, 100vh);
-      width: min(100vw, 100dvh);
-      height: min(100vw, 100vh);
-      height: min(100vw, 100dvh);
-      max-width: 100%;
-      max-height: 100%;
-      aspect-ratio: 1 / 1;
-      overflow: hidden;
-      background-color: #000000;
     }
 
     video {
-      width: 100%;
-      height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       object-fit: contain;
-      display: block;
+      background: #000;
     }
   </style>
 </head>
 <body>
-  <main class="video-frame">
-    <video
-      id="loopVideo"
-      autoplay
-      loop
-      muted
-      playsinline
-      webkit-playsinline
-      preload="auto"
-      aria-label="Looping 1:1 video on skzlx.com"
-    >
-      <source src="/K65J0P9HHJ.mp4" type="video/mp4" />
-      Your browser does not support HTML5 video.
-    </video>
-  </main>
+  <video
+    id="v"
+    src="K65J0P9HHJ.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+    webkit-playsinline
+    disablepicturepicture
+    disableRemotePlayback
+    preload="auto"
+  ></video>
 
   <script>
     (function () {
-      const video = document.getElementById("loopVideo");
-      if (!video) return;
+      var v = document.getElementById("v");
+      if (!v) return;
 
-      video.muted = true;
-      video.defaultMuted = true;
+      v.muted = true;
+      v.defaultMuted = true;
+      v.loop = true;
+      v.controls = false;
 
-      function tryPlay() {
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === "function") {
-          playPromise.catch(function () {
-            // Autoplay blocked by power-saving or strict browser policy; retry on interaction.
-          });
+      function playNow() {
+        v.muted = true;
+        var p = v.play();
+        if (p && p.catch) {
+          p.catch(function () {});
         }
       }
 
-      if (document.readyState === "complete" || document.readyState === "interactive") {
-        tryPlay();
-      } else {
-        document.addEventListener("DOMContentLoaded", tryPlay, { once: true });
-      }
+      playNow();
+
+      v.addEventListener("pause", function () {
+        playNow();
+      });
+
+      v.addEventListener("ended", function () {
+        v.currentTime = 0;
+        playNow();
+      });
 
       document.addEventListener("visibilitychange", function () {
-        if (!document.hidden && video.paused) {
-          tryPlay();
+        if (!document.hidden) {
+          playNow();
         }
       });
 
-      ["pointerdown", "touchstart", "keydown"].forEach(function (eventName) {
-        document.addEventListener(
-          eventName,
-          function () {
-            if (video.paused) {
-              tryPlay();
-            }
-          },
-          { once: true, passive: true }
-        );
+      window.addEventListener("pageshow", playNow);
+      window.addEventListener("focus", playNow);
+
+      ["pointerdown", "touchstart", "click", "keydown"].forEach(function (ev) {
+        document.addEventListener(ev, playNow, { passive: true });
       });
     })();
   </script>

@@ -43,7 +43,6 @@
     src="K65J0P9HHJ.mp4"
     autoplay
     loop
-    muted
     playsinline
     webkit-playsinline
     disablepicturepicture
@@ -56,41 +55,66 @@
       var v = document.getElementById("v");
       if (!v) return;
 
-      v.muted = true;
-      v.defaultMuted = true;
+      var userUnlockedAudio = false;
+
       v.loop = true;
       v.controls = false;
+      v.volume = 1.0;
 
-      function playNow() {
-        v.muted = true;
+      function tryPlay(withSound) {
+        v.muted = !withSound;
         var p = v.play();
         if (p && p.catch) {
-          p.catch(function () {});
+          p.catch(function () {
+            if (withSound && !userUnlockedAudio) {
+              v.muted = true;
+              var fallback = v.play();
+              if (fallback && fallback.catch) {
+                fallback.catch(function () {});
+              }
+            }
+          });
         }
       }
 
-      playNow();
+      function unlockAndSyncAudio() {
+        userUnlockedAudio = true;
+        v.muted = false;
+        v.volume = 1.0;
+        if (v.paused) {
+          v.currentTime = 0;
+        }
+        tryPlay(true);
+      }
+
+      // Attempt unmuted autoplay first; fall back to muted if blocked
+      tryPlay(true);
 
       v.addEventListener("pause", function () {
-        playNow();
+        tryPlay(userUnlockedAudio);
       });
 
       v.addEventListener("ended", function () {
         v.currentTime = 0;
-        playNow();
+        tryPlay(userUnlockedAudio);
       });
 
       document.addEventListener("visibilitychange", function () {
         if (!document.hidden) {
-          playNow();
+          tryPlay(userUnlockedAudio);
         }
       });
 
-      window.addEventListener("pageshow", playNow);
-      window.addEventListener("focus", playNow);
+      window.addEventListener("pageshow", function () {
+        tryPlay(userUnlockedAudio);
+      });
+
+      window.addEventListener("focus", function () {
+        tryPlay(userUnlockedAudio);
+      });
 
       ["pointerdown", "touchstart", "click", "keydown"].forEach(function (ev) {
-        document.addEventListener(ev, playNow, { passive: true });
+        document.addEventListener(ev, unlockAndSyncAudio, { passive: true });
       });
     })();
   </script>

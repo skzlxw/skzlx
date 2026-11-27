@@ -270,8 +270,8 @@
     }
 
     .video-box {
-      width: min(100%, 82dvh);
-      aspect-ratio: 1 / 1;
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
       display: flex;
@@ -302,8 +302,9 @@
           id="v"
           src="K65J0P9HHJ.mp4"
           title="skzlx.com — K65J0P9HHJ"
-          aria-label="skzlx.com continuous 1:1 video and audio loop"
+          aria-label="skzlx.com continuous video and audio loop"
           autoplay
+          muted
           loop
           playsinline
           webkit-playsinline
@@ -321,70 +322,82 @@
       var hint = document.getElementById("audioHint");
       if (!v) return;
 
-      var userUnlockedAudio = false;
+      var audioEnabled = false;
+      var videoFailed = false;
 
+      // Start muted so modern desktop and mobile browsers can autoplay.
+      // Sound is unlocked by a real user interaction anywhere on the page.
       v.loop = true;
       v.controls = false;
+      v.muted = true;
+      v.defaultMuted = true;
       v.volume = 1.0;
 
-      function tryPlay(withSound) {
-        v.muted = !withSound;
-        var p = v.play();
-        if (p && p.catch) {
-          p.catch(function () {
-            if (withSound && !userUnlockedAudio) {
-              v.muted = true;
-              var fallback = v.play();
-              if (fallback && fallback.catch) {
-                fallback.catch(function () {});
-              }
-            }
-          });
+      function tryPlay() {
+        if (videoFailed) return;
+
+        try {
+          var promise = v.play();
+          if (promise && typeof promise.catch === "function") {
+            promise.catch(function () {
+              // The browser may temporarily block playback. The next user
+              // interaction, page return or canplay event will retry it.
+            });
+          }
+        } catch (e) {
+          // Browser playback policy or a temporary media state may block play().
         }
       }
 
-      function unlockAndSyncAudio() {
-        userUnlockedAudio = true;
+      function unlockAudio() {
+        if (videoFailed) return;
+
+        audioEnabled = true;
+        v.defaultMuted = false;
         v.muted = false;
         v.volume = 1.0;
-        if (v.paused) {
-          v.currentTime = 0;
-        }
-        tryPlay(true);
-        if (hint) {
-          hint.textContent = "audio enabled";
-        }
+
+        // Never reset currentTime: audio starts at the current video position.
+        // Calling play() here keeps sound unlocked on mobile browsers too.
+        tryPlay();
+        if (hint) hint.textContent = "audio enabled";
       }
 
-      // Attempt unmuted autoplay first; fall back to muted if blocked
-      tryPlay(true);
+      v.addEventListener("error", function () {
+        videoFailed = true;
+        if (hint) {
+          hint.textContent = "Video unavailable — upload the real K65J0P9HHJ.mp4 file.";
+        }
+      });
+
+      v.addEventListener("canplay", function () {
+        if (v.paused) tryPlay();
+      });
 
       v.addEventListener("pause", function () {
-        tryPlay(userUnlockedAudio);
+        if (!document.hidden) tryPlay();
       });
 
       v.addEventListener("ended", function () {
+        // Native loop handles normal playback; this is a backup.
         v.currentTime = 0;
-        tryPlay(userUnlockedAudio);
+        tryPlay();
       });
 
       document.addEventListener("visibilitychange", function () {
-        if (!document.hidden) {
-          tryPlay(userUnlockedAudio);
-        }
+        if (!document.hidden) tryPlay();
       });
 
-      window.addEventListener("pageshow", function () {
-        tryPlay(userUnlockedAudio);
+      window.addEventListener("pageshow", tryPlay);
+      window.addEventListener("focus", tryPlay);
+
+      // Mouse, touch and keyboard support; subsequent taps do not restart it.
+      ["pointerdown", "touchend", "click", "keydown"].forEach(function (eventName) {
+        document.addEventListener(eventName, unlockAudio, { passive: true });
       });
 
-      window.addEventListener("focus", function () {
-        tryPlay(userUnlockedAudio);
-      });
-
-      ["pointerdown", "touchstart", "click", "keydown"].forEach(function (ev) {
-        document.addEventListener(ev, unlockAndSyncAudio, { passive: true });
-      });
+      // Muted autoplay; if restricted, the first interaction will start it.
+      tryPlay();
     })();
   </script>
 </body>

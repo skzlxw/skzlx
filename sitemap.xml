@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>https://skzlx.com/</loc>
-    <lastmod>2026-11-23</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-11-27</lastmod>
+    <image:image><image:loc>https://skzlx.com/0askzlx2008hangoutpfp5.png</image:loc></image:image>
     <video:video>
+      <video:thumbnail_loc>https://skzlx.com/0askzlx2008hangoutpfp5.png</video:thumbnail_loc>
+      <video:title>2008 Hangout Credits</video:title>
+      <video:description>Credits video for the Roblox game 2008 Hangout by skzlx.</video:description>
       <video:content_loc>https://skzlx.com/K65J0P9HHJ.mp4</video:content_loc>
-      <video:title>skzlx.com — K65J0P9HHJ</video:title>
-      <video:description>Official domain and continuous 1:1 visual and audio loop by skzlx.</video:description>
     </video:video>
   </url>
 </urlset>
